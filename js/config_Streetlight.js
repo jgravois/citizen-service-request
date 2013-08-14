@@ -208,10 +208,11 @@ dojo.declare("js.config", null, {
             LocatorFieldName: 'Loc_name',
             LocatorFieldValues: ["USA.StreetName", "USA.PointAddress", "USA.StreetAddress"]
         }, {
-            DisplayText: "Request ID",
-            DefaultValue: "Westerville",
-            QueryString: "REQUESTID LIKE '${0}%'",
-            DisplayField: "${REQUESTID}"
+            LocatorURL: "http://services.arcgis.com/8xyWD7BXPXLSUGKQ/arcgis/rest/services/ReportStreetlightProblem/FeatureServer/1",
+            DisplayText: "Pole ID",
+            DefaultValue: "19085",
+            QueryString: "FACILITYID LIKE '${0}%'",
+            DisplayField: "${FACILITYID}"
         }]
     },
 

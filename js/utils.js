@@ -211,6 +211,7 @@ function ShowServiceRequestDetails(mapPoint, attributes) {
             ServiceRequestDetails(attributes);
         }
     }, 500);
+
 }
 
 //Create service request details view

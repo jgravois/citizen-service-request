@@ -1,19 +1,19 @@
 ﻿/** @license
- | Version 10.2
- | Copyright 2012 Esri
- |
- | Licensed under the Apache License, Version 2.0 (the "License");
- | you may not use this file except in compliance with the License.
- | You may obtain a copy of the License at
- |
- |    http://www.apache.org/licenses/LICENSE-2.0
- |
- | Unless required by applicable law or agreed to in writing, software
- | distributed under the License is distributed on an "AS IS" BASIS,
- | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- | See the License for the specific language governing permissions and
- | limitations under the License.
- */
+| Version 10.2
+| Copyright 2012 Esri
+|
+| Licensed under the Apache License, Version 2.0 (the "License");
+| you may not use this file except in compliance with the License.
+| You may obtain a copy of the License at
+|
+|    http://www.apache.org/licenses/LICENSE-2.0
+|
+| Unless required by applicable law or agreed to in writing, software
+| distributed under the License is distributed on an "AS IS" BASIS,
+| WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+| See the License for the specific language governing permissions and
+| limitations under the License.
+*/
 //Locate address
 function LocateAddress() {
     var thisSearchTime = lastSearchTime = (new Date()).getTime();
@@ -68,7 +68,22 @@ function LocateAddress() {
             }
             return;
         } else {
-            LocateServiceRequest();
+            if (typeof locatorSettings.Locators[1].LocatorURL == "undefined") {
+                LocateServiceRequest();
+
+            }
+            else if (locatorSettings.Locators[1].LocatorURL == "") {
+                LocateServiceRequest();
+
+            }
+            else if (locatorSettings.Locators[1].LocatorURL == operationalLayers.ServiceRequestLayerURL) {
+                LocateServiceRequest();
+
+            }
+            else {
+                LocateFeature();
+            }
+
         }
     }
 }
@@ -189,6 +204,104 @@ function GetExtent(point) {
     var xmax = point.x;
     var ymax = point.y;
     return new esri.geometry.Extent(xmin, ymin, xmax, ymax, map.spatialReference);
+}
+
+//Locate feature
+function LocateFeature() {
+    var thisSearchTime = lastSearchTime = (new Date()).getTime();
+    mapPoint = null;
+    dojo.empty(dojo.byId('tblAddressResults'));
+    RemoveScrollBar(dojo.byId('divAddressScrollContainer'));
+    if (dojo.byId("txtAddress").value.trim() == '') {
+        dojo.byId('txtAddress').focus();
+        return;
+    }
+    var qTask = new esri.tasks.QueryTask(locatorSettings.Locators[1].LocatorURL);
+    var query = new esri.tasks.Query();
+    query.where = dojo.string.substitute(locatorSettings.Locators[1].QueryString, [dojo.byId('txtAddress').value.trim()]);
+    query.outFields = ["*"];
+    query.returnGeometry = true;
+    qTask.execute(query, function (featureset) {
+        if (thisSearchTime < lastSearchTime) {
+            return;
+        }
+        dojo.empty(dojo.byId('tblAddressResults'));
+        RemoveScrollBar(dojo.byId('divAddressScrollContainer'));
+        if (dojo.byId("txtAddress").value.trim() == '') {
+            dojo.byId('txtAddress').focus();
+            dojo.byId("imgSearchLoader").style.display = "none";
+            dojo.empty(dojo.byId('tblAddressResults'));
+            RemoveScrollBar(dojo.byId('divAddressScrollContainer'));
+            dojo.byId("imgSearchLoader").style.display = "none";
+            return;
+        }
+        dojo.byId("imgSearchLoader").style.display = "none";
+        if (featureset.features.length > 0) {
+            if (featureset.features.length == 1) {
+                dojo.byId("txtAddress").blur();
+                selectedRequest = featureset.features[0].geometry;
+                map.infoWindow.hide();
+                dojo.byId("txtAddress").value = dojo.string.substitute(locatorSettings.Locators[1].DisplayField, featureset.features[0].attributes);
+                dojo.byId('txtAddress').setAttribute("defaultRequestName", dojo.string.substitute(locatorSettings.Locators[1].DisplayField, featureset.features[0].attributes));
+                dojo.byId('txtAddress').setAttribute("defaultRequestTitle", dojo.byId('txtAddress').value);
+                //LocateAddressOnMap(selectedRequest);
+                LocateOnMap(featureset.features[0].attributes);
+            } else {
+                var table = dojo.byId("tblAddressResults");
+                var tBody = document.createElement("tbody");
+                table.appendChild(tBody);
+                table.cellSpacing = 0;
+                table.cellPadding = 0;
+                var featureSet = [];
+                for (var i = 0; i < featureset.features.length; i++) {
+                    featureSet.push({
+                        name: dojo.string.substitute(locatorSettings.Locators[1].DisplayField, featureset.features[i].attributes),
+                        geometry: featureset.features[i].geometry,
+                        attributes: featureset.features[i].attributes
+                    });
+                }
+
+                featureSet.sort(function (a, b) {
+                    var nameA = a.name.toLowerCase(),
+                        nameB = b.name.toLowerCase()
+                    if (nameA < nameB) //sort string ascending
+                        return -1
+                    else return 1
+                });
+
+                for (var i = 0; i < featureSet.length; i++) {
+                    var tr = document.createElement("tr");
+                    tBody.appendChild(tr);
+                    var td1 = document.createElement("td");
+                    td1.innerHTML = dojo.string.substitute(locatorSettings.Locators[1].DisplayField, featureSet[i].attributes);
+                    td1.align = "left";
+                    td1.className = 'bottomborder';
+                    td1.style.cursor = "pointer";
+                    td1.height = 20;
+                    td1.setAttribute("x", featureSet[i].geometry.x);
+                    td1.setAttribute("y", featureSet[i].geometry.y);
+                    td1.setAttribute("name", dojo.string.substitute(locatorSettings.Locators[1].DisplayField, featureSet[i].attributes));
+                    td1.setAttribute("index", i);
+                    td1.onclick = function () {
+                        map.infoWindow.hide();
+                        dojo.byId("txtAddress").value = this.innerHTML;
+                        dojo.byId('txtAddress').setAttribute("defaultRequestName", this.innerHTML);
+                        dojo.byId('txtAddress').setAttribute("defaultRequestTitle", this.innerHTML);
+                        selectedRequest = new esri.geometry.Point(this.getAttribute("x"), this.getAttribute("y"), map.spatialReference);
+                        LocateOnMap(featureSet[this.getAttribute("index")].attributes);
+
+                    }
+                    tr.appendChild(td1);
+                }
+                SetAddressResultsHeight();
+            }
+
+        } else {
+            ErrorHandlerForRequests();
+        }
+    }, function (err) {
+        ErrorHandlerForRequests();
+    });
 }
 
 //Locate service request by ID
@@ -325,7 +438,25 @@ function LocateServiceRequestOnMap(attributes) {
         HideAddressContainer();
     }
 }
+function LocateOnMap(attributes) {
+    map.getLayer(tempGraphicsLayerId).clear();
+    map.getLayer(highlightPollLayerId).clear();
+    var symbol = new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_CIRCLE, locatorRippleSize, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color(rippleColor), 4), new dojo.Color([0, 0, 0, 0]));
+    AddGraphic(map.getLayer(highlightPollLayerId), symbol, selectedRequest);
+    var ext = GetExtent(selectedRequest);
+    map.setExtent(ext.getExtent().expand(2));
 
+    if (!isMobileDevice) {
+        if (dojo.coords("divAddressContent").h > 0) {
+            dojo.replaceClass("divAddressContent", "hideContainerHeight", "showContainerHeight");
+            dojo.byId('divAddressContent').style.height = '0px';
+        }
+    }
+
+    if (isMobileDevice) {
+        HideAddressContainer();
+    }
+}
 //function to display the current location of the user
 function ShowMyLocation() {
     HideBaseMapLayerContainer();
