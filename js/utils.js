@@ -1330,7 +1330,7 @@ function ShowAddCommentsView() {
 function CreateRequestTypesList(serviceRequestLayerFields) {
     var serviceRequestFields;
     for (var i = 0; i < serviceRequestLayerFields.length; i++) {
-        if (serviceRequestLayerFields[i].name == requestLayerName) {
+        if (serviceRequestLayerFields[i].name.toUpperCase() == requestLayerName.toUpperCase()) {
             serviceRequestFields = serviceRequestLayerFields[i].domain.codedValues;
             break;
         }
