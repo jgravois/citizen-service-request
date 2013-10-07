@@ -1,20 +1,20 @@
 ﻿/*global dojo */
 /** @license
- | Version 10.2
- | Copyright 2012 Esri
- |
- | Licensed under the Apache License, Version 2.0 (the "License");
- | you may not use this file except in compliance with the License.
- | You may obtain a copy of the License at
- |
- |    http://www.apache.org/licenses/LICENSE-2.0
- |
- | Unless required by applicable law or agreed to in writing, software
- | distributed under the License is distributed on an "AS IS" BASIS,
- | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- | See the License for the specific language governing permissions and
- | limitations under the License.
- */
+| Version 10.2
+| Copyright 2013 Esri
+|
+| Licensed under the Apache License, Version 2.0 (the "License");
+| you may not use this file except in compliance with the License.
+| You may obtain a copy of the License at
+|
+|    http://www.apache.org/licenses/LICENSE-2.0
+|
+| Unless required by applicable law or agreed to in writing, software
+| distributed under the License is distributed on an "AS IS" BASIS,
+| WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+| See the License for the specific language governing permissions and
+| limitations under the License.
+*/
 dojo.provide("js.config");
 dojo.declare("js.config", null, {
 
@@ -81,7 +81,7 @@ dojo.declare("js.config", null, {
     ReferenceOverlays: [
     { URL: "http://services.arcgis.com/8xyWD7BXPXLSUGKQ/arcgis/rest/services/ReportStreetlightProblem/FeatureServer/1" }
     ],
-    
+
     // Initial map extent. Use comma (,) to separate values and don t delete the last comma
     DefaultExtent: "-8946100,3177490,-8934600,3181000",
 
@@ -118,7 +118,7 @@ dojo.declare("js.config", null, {
     // Choose content/fields for the info window
     InfoWindowContent: "${REQUESTTYPE}",
 
-    //Define Service request layer name
+    //Define Service request layer name Type Field
     RequestLayerName: "REQUESTTYPE",
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -208,10 +208,11 @@ dojo.declare("js.config", null, {
             LocatorFieldName: 'Loc_name',
             LocatorFieldValues: ["USA.StreetName", "USA.PointAddress", "USA.StreetAddress"]
         }, {
-            DisplayText: "Request ID",
-            DefaultValue: "Westerville",
-            QueryString: "REQUESTID LIKE '${0}%'",
-            DisplayField: "${REQUESTID}"
+            LocatorURL: "http://services.arcgis.com/8xyWD7BXPXLSUGKQ/arcgis/rest/services/ReportStreetlightProblem/FeatureServer/1",
+            DisplayText: "Pole ID",
+            DefaultValue: "19085",
+            QueryString: "FACILITYID LIKE '${0}%'",
+            DisplayField: "${FACILITYID}"
         }]
     },
 
