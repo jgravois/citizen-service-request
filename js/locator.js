@@ -118,31 +118,33 @@ function ShowLocatedAddress(candidates) {
                 candidatesLength++;
             } else {
                 for (j in locatorSettings.Locators[0].LocatorFieldValues) {
-                    if (candidate.attributes[locatorSettings.Locators[0].LocatorFieldName] == locatorSettings.Locators[0].LocatorFieldValues[j]) {
-                        var tr = document.createElement("tr");
-                        tBody.appendChild(tr);
-                        var td1 = document.createElement("td");
-                        td1.innerHTML = candidate.address;
-                        td1.align = "left";
-                        td1.className = 'bottomborder';
-                        td1.style.cursor = "pointer";
-                        td1.height = 20;
-                        td1.setAttribute("x", candidate.location.x);
-                        td1.setAttribute("y", candidate.location.y);
-                        td1.setAttribute("address", candidate.address);
-                        td1.onclick = function () {
-                            map.getLayer(highlightPollLayerId).clear();
-                            if (!isMobileDevice) {
-                                map.infoWindow.hide();
-                            }
-                            mapPoint = new esri.geometry.Point(this.getAttribute("x"), this.getAttribute("y"), map.spatialReference);
-                            dojo.byId('txtAddress').setAttribute("defaultAddress", this.innerHTML);
-                            dojo.byId("txtAddress").setAttribute("defaultAddressTitle", this.innerHTML);
-                            LocateAddressOnMap(mapPoint);
+                    if (locatorSettings.Locators[0].LocatorFieldValues.hasOwnProperty(j)) {
+                        if (candidate.attributes[locatorSettings.Locators[0].LocatorFieldName] == locatorSettings.Locators[0].LocatorFieldValues[j]) {
+                            var tr = document.createElement("tr");
+                            tBody.appendChild(tr);
+                            var td1 = document.createElement("td");
+                            td1.innerHTML = candidate.address;
+                            td1.align = "left";
+                            td1.className = 'bottomborder';
+                            td1.style.cursor = "pointer";
+                            td1.height = 20;
+                            td1.setAttribute("x", candidate.location.x);
+                            td1.setAttribute("y", candidate.location.y);
+                            td1.setAttribute("address", candidate.address);
+                            td1.onclick = function () {
+                                map.getLayer(highlightPollLayerId).clear();
+                                if (!isMobileDevice) {
+                                    map.infoWindow.hide();
+                                }
+                                mapPoint = new esri.geometry.Point(this.getAttribute("x"), this.getAttribute("y"), map.spatialReference);
+                                dojo.byId('txtAddress').setAttribute("defaultAddress", this.innerHTML);
+                                dojo.byId("txtAddress").setAttribute("defaultAddressTitle", this.innerHTML);
+                                LocateAddressOnMap(mapPoint);
 
+                            }
+                            tr.appendChild(td1);
+                            candidatesLength++;
                         }
-                        tr.appendChild(td1);
-                        candidatesLength++;
                     }
                 }
             }

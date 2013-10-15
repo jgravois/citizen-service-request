@@ -163,21 +163,24 @@ function ShowServiceRequestDetails(mapPoint, attributes) {
         dojo.byId('divInfoContent').style.height = infoPopupHeight + "px";
     }
     for (var i in attributes) {
-        if (!attributes[i]) {
-            attributes[i] = "";
+        if (attributes.hasOwnProperty(i)) {
+            if (!attributes[i]) {
+                attributes[i] = "";
+            }
         }
     }
 
     selectedRequestStatus = dojo.string.substitute(status, attributes);
     map.getLayer(tempGraphicsLayerId).clear();
 
-    (isMobileDevice) ? map.infoWindow.resize(225, 60) : map.infoWindow.resize(infoPopupWidth, infoPopupHeight);
-    if (!isMobileDevice) {
-        map.setExtent(GetBrowserMapExtent(mapPoint));
-    } else {
-        map.setExtent(GetMobileMapExtent(mapPoint));
-    }
     setTimeout(function () {
+        (isMobileDevice) ? map.infoWindow.resize(225, 60) : map.infoWindow.resize(infoPopupWidth, infoPopupHeight);
+        if (!isMobileDevice) {
+            map.setExtent(GetBrowserMapExtent(mapPoint));
+        } else {
+            map.setExtent(GetMobileMapExtent(mapPoint));
+        }
+
         selectedMapPoint = mapPoint;
         var screenPoint = map.toScreen(selectedMapPoint);
         screenPoint.y = map.height - screenPoint.y;
@@ -210,8 +213,7 @@ function ShowServiceRequestDetails(mapPoint, attributes) {
         } else {
             ServiceRequestDetails(attributes);
         }
-    }, 500);
-
+    }, 1000);
 }
 
 //Create service request details view
@@ -240,29 +242,30 @@ function ServiceRequestDetails(attributes) {
     tblInfoDetails.appendChild(tbody);
     var date = new js.date();
     for (var index in infoWindowData) {
-        var tr = document.createElement("tr");
-        tbody.appendChild(tr);
-        switch (infoWindowData[index].DataType) {
-            case "string":
-                CreateTableRow(tr, infoWindowData[index].DisplayText, dojo.string.substitute(infoWindowData[index].AttributeValue, attributes));
-                break;
-            case "date":
-                // Extract the desired date field from the list of attributes. If the date is not available, the date field is an empty string
-                var dateField = dojo.string.substitute(infoWindowData[index].AttributeValue, attributes);
-                var dateString = showNullValueAs;
-                if (dateField.length > 0)
-                {
-                    var utcMilliseconds = Number(dateField);
-                    dateString = dojo.date.locale.format(date.utcToLocal(date.utcTimestampFromMs(utcMilliseconds)), {
-                        datePattern: formatDateAs,
-                        selector: "date"
-                    });
-                }
-                CreateTableRow(tr, infoWindowData[index].DisplayText, dateString);
-                break;
+        if (infoWindowData.hasOwnProperty(index)) {
+            var tr = document.createElement("tr");
+            tbody.appendChild(tr);
+            switch (infoWindowData[index].DataType) {
+                case "string":
+                    CreateTableRow(tr, infoWindowData[index].DisplayText, dojo.string.substitute(infoWindowData[index].AttributeValue, attributes));
+                    break;
+                case "date":
+                    // Extract the desired date field from the list of attributes. If the date is not available, the date field is an empty string
+                    var dateField = dojo.string.substitute(infoWindowData[index].AttributeValue, attributes);
+                    var dateString = showNullValueAs;
+                    if (dateField.length > 0) 
+                    {
+                        var utcMilliseconds = Number(dateField);
+                        dateString = dojo.date.locale.format(date.utcToLocal(date.utcTimestampFromMs(utcMilliseconds)), {
+                            datePattern: formatDateAs,
+                            selector: "date"
+                        });
+                    }
+                    CreateTableRow(tr, infoWindowData[index].DisplayText, dateString);
+                    break;
+            }
         }
     }
-
     FetchRequestComments(dojo.string.substitute(requestId, attributes));
     FetchAttachmentDetails(attributes[map.getLayer(serviceRequestLayerId).objectIdField], tbody);
     SetViewDetailsHeight();
@@ -307,11 +310,13 @@ function CreateTableRow(tr, displayName, value) {
             }
             var x = value.split(" ");
             for (var i in x) {
-                w = x[i].getWidth(15) - 50;
-                var boxWidth = (isMobileDevice) ? (dojo.window.getBox().w - 10) : (infoPopupWidth - 40);
-                if (boxWidth < w) {
-                    td1.className = "tdBreakWord";
-                    continue;
+                if (x.hasOwnProperty(i)) {
+                    w = x[i].getWidth(15) - 50;
+                    var boxWidth = (isMobileDevice) ? (dojo.window.getBox().w - 10) : (infoPopupWidth - 40);
+                    if (boxWidth < w) {
+                        td1.className = "tdBreakWord";
+                        continue;
+                    }
                 }
             }
         }
@@ -601,11 +606,13 @@ function CreateCommentRecord(attributes, i) {
         }
         var x = dojo.string.substitute(commentsInfoPopupFieldsCollection.Comments, attributes).split(" ");
         for (var i in x) {
-            w = x[i].getWidth(15) - 50;
-            var boxWidth = (isMobileDevice) ? (dojo.window.getBox().w - 10) : (infoPopupWidth - 40);
-            if (boxWidth < w) {
-                td2.className = "tdBreakWord";
-                continue;
+            if (x.hasOwnProperty(i)) {
+                w = x[i].getWidth(15) - 50;
+                var boxWidth = (isMobileDevice) ? (dojo.window.getBox().w - 10) : (infoPopupWidth - 40);
+                if (boxWidth < w) {
+                    td2.className = "tdBreakWord";
+                    continue;
+                }
             }
         }
     } else {
@@ -1074,7 +1081,6 @@ function IsPhoneNumber(value) {
 //Hide create request container
 function HideCreateRequestContainer() {
     selectedMapPoint = null;
-    featureID = null;
     map.getLayer(tempGraphicsLayerId).clear();
     map.infoWindow.hide();
     if (isMobileDevice) {
@@ -1107,9 +1113,13 @@ function SetFileName(fileUploadCtl) {
 function OrientationChanged() {
     orientationChange = true;
     if (map) {
-        var timeout = (isMobileDevice && isiOS) ? 100 : 700;
+        var timeout = (isMobileDevice && isiOS) ? 100 : 500;
+        map.reposition();
+        map.resize();
         map.infoWindow.hide();
         setTimeout(function () {
+            map.reposition();
+            map.resize();
             if (isMobileDevice) {
                 map.reposition();
                 map.resize();
