@@ -97,7 +97,7 @@ function dojoInit() {
         });
     }
 
-    if (userAgent.indexOf("Android") >= 0 || userAgent.indexOf("iPhone") >= 0) {
+    if ((userAgent.indexOf("Android") >= 0 && userAgent.indexOf("Mobile") >= 0) || userAgent.indexOf("iPhone") >= 0) {
         isMobileDevice = true;
         if ((userAgent.indexOf("Android") >= 0)) {
             isAndroidDevice = true;
@@ -105,7 +105,7 @@ function dojoInit() {
         dojo.byId('dynamicStyleSheet').href = "styles/mobile.css";
         dojo.byId('divSplashContent').style.fontSize = "15px";
 
-    } else if (userAgent.indexOf("iPad") >= 0) {
+    } else if ((userAgent.indexOf("iPad") >= 0) || (userAgent.indexOf("Android") >= 0)) {
         isTablet = true;
         dojo.byId('dynamicStyleSheet').href = "styles/tablet.css";
         dojo.byId('divSplashContent').style.fontSize = "14px";
@@ -185,7 +185,9 @@ function dojoInit() {
             LocateAddress();
         }, 100);
     });
-
+    if (!Modernizr.geolocation) {
+        dojo.byId("tdGeolocation").style.display = "none";
+    }
     var responseObject = new js.config();
     dojo.byId("tdSearchAddress").innerHTML = responseObject.LocatorSettings.Locators[0].DisplayText;
     dojo.byId("tdSearchRequest").innerHTML = responseObject.LocatorSettings.Locators[1].DisplayText;
@@ -218,9 +220,7 @@ function dojoInit() {
         dojo.byId("divRequestTypes").style.display = "none";
     });
 
-    if (!Modernizr.geolocation) {
-        dojo.byId("tdGeolocation").style.display = "none";
-    }
+
     mapSharingOptions = responseObject.MapSharingOptions;
     baseMapLayers = responseObject.BaseMapLayers;
     referenceOverlays = responseObject.ReferenceOverlays
@@ -276,24 +276,10 @@ function dojoInit() {
             messages = xmlResponse;
         }
     });
-    map = new esri.Map("map", {
-        slider: true,
-        infoWindow: infoWindow
-    });
-    dojo.connect(map, "onClick", function (evt) {
-        map.infoWindow.hide();
-        selectedMapPoint = null;
-        ShowProgressIndicator();
-        setTimeout(function () {
-            dojo.byId("divRequestTypes").style.display = "none";
-            dojo.byId("divInfoDetails").style.display = "none";
-            AddServiceRequest(evt.mapPoint);
-            HideProgressIndicator();
-        }, 500);
-    });
+
     ShowProgressIndicator();
-    CreateBaseMapComponent();
-    AddReferenceOverlays();
+
+
     operationalLayers = responseObject.OperationalLayers;
     serviceRequestCommentsLayerUrl = responseObject.ServiceRequestCommentsLayerURL;
     formatDateAs = responseObject.FormatDateAs;
@@ -364,6 +350,21 @@ function dojoInit() {
     commentsInfoPopupFieldsCollection = responseObject.CommentsInfoPopupFieldsCollection;
     serviceRequestFields = responseObject.ServiceRequestFields;
     databaseFields = responseObject.DatabaseFields;
+    map = new esri.Map("map", {
+        slider: true,
+        infoWindow: infoWindow
+    });
+    dojo.connect(map, "onClick", function (evt) {
+        map.infoWindow.hide();
+        selectedMapPoint = null;
+        ShowProgressIndicator();
+        setTimeout(function () {
+            dojo.byId("divRequestTypes").style.display = "none";
+            dojo.byId("divInfoDetails").style.display = "none";
+            AddServiceRequest(evt.mapPoint);
+            HideProgressIndicator();
+        }, 500);
+    });
     dojo.connect(map, "onLoad", function () {
         var zoomExtent;
         var extent = GetQuerystring('extent');
@@ -372,11 +373,14 @@ function dojoInit() {
         } else {
             zoomExtent = responseObject.DefaultExtent.split(",");
         }
+        initializeMap();
         startExtent = new esri.geometry.Extent(parseFloat(zoomExtent[0]), parseFloat(zoomExtent[1]), parseFloat(zoomExtent[2]), parseFloat(zoomExtent[3]), map.spatialReference);
         map.setExtent(startExtent);
 
     });
 
+    CreateBaseMapComponent();
+    AddReferenceOverlays();
     if (!allowAttachments) {
         dojo.byId('trFileUpload').style.display = "none";
     }
@@ -386,7 +390,7 @@ function dojoInit() {
     dojo.connect(dojo.byId('imgHelp'), "onclick", function () {
         window.open(responseObject.HelpURL);
     });
-    initializeMap();
+
     dojo.connect(map, "onExtentChange", function () {
         SetMapTipPosition();
         if (dojo.coords("divAppContainer").h > 0) {
