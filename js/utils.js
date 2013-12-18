@@ -172,12 +172,12 @@ function ShowServiceRequestDetails(mapPoint, attributes) {
     try {
         selectedRequestStatus = dojo.string.substitute(status, attributes);
     }
-	catch (e) {
-	/*PostgreSQL only supports lowercase fieldnames.  
-    if casing doesn't match exactly, an unintelligible error will be thrown in the API source*/
-	    console.log("Error encountered during query: Check both the case and spelling of the Status field within config.js");
-		return
-	}
+    catch (e) {
+        /*PostgreSQL only supports lowercase fieldnames.
+        if casing doesn't match exactly, an unintelligible error will be thrown in the API source*/
+        console.log("Error encountered during query: Check both the case and spelling of the Status field within config.js");
+        return
+    }
     map.getLayer(tempGraphicsLayerId).clear();
 
     setTimeout(function () {
